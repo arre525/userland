@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Usage information in README_RaspiMJPEG.md
  */
 
-#define VERSION "4.1"
+#define VERSION "4.2"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,11 +81,13 @@ unsigned int cam_setting_sharpness=0, cam_setting_contrast=0, cam_setting_bright
 char cam_setting_em[20]="auto", cam_setting_wb[20]="auto", cam_setting_ie[20]="none", cam_setting_mm[20]="average";
 unsigned long int cam_setting_bitrate=17000000, cam_setting_roi_x=0, cam_setting_roi_y=0, cam_setting_roi_w=65536, cam_setting_roi_h=65536, cam_setting_ss=0;
 unsigned int video_width=1920, video_height=1080, video_fps=25, MP4Box_fps=25, image_width=2592, image_height=1944;
-char *jpeg_filename = 0, *jpeg2_filename = 0, *h264_filename = 0, *pipe_filename = 0, *status_filename = 0;
+char *jpeg_filename = 0, *jpeg2_filename = 0, *h264_filename = 0, *pipe_filename = 0, *status_filename = 0, *cam_setting_annotation = 0;
 unsigned char timelapse=0, mp4box=0, running=1, autostart=1, quality=85, idle=0, capturing=0, motion_detection=0;
 int time_between_pic;
 time_t currTime;
 struct tm *localTime;
+
+void cam_set_annotation();
   
 void error (const char *string) {
 
@@ -148,6 +150,7 @@ static void jpegencoder_buffer_callback (MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
       free(filename_temp2);
       image_cnt++;
       mjpeg_cnt = 0;
+      cam_set_annotation();
     }
   }
 
@@ -408,6 +411,31 @@ void cam_set_bitrate () {
   if(status != MMAL_SUCCESS) error("Could not set bitrate");
 }
 
+void cam_set_annotation () {
+  char *filename_temp;
+  MMAL_PARAMETER_CAMERA_ANNOTATE_T anno = {{MMAL_PARAMETER_ANNOTATE, sizeof(MMAL_PARAMETER_CAMERA_ANNOTATE_T)}};
+
+  if(cam_setting_annotation != 0) {
+    currTime = time(NULL);
+    localTime = localtime (&currTime);
+    asprintf(&filename_temp, cam_setting_annotation, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
+    anno.enable = 1;
+    strcpy(anno.text, filename_temp);
+    free(filename_temp);
+  }
+  else {
+    anno.enable = 0;
+  }
+  anno.show_shutter = 0;
+  anno.show_analog_gain = 0;
+  anno.show_lens = 0;
+  anno.show_caf = 0;
+  anno.show_motion = 0;
+
+  status = mmal_port_parameter_set(camera->control, &anno.hdr);
+  if(status != MMAL_SUCCESS) error("Could not set annotation");
+}
+
 void start_all (void) {
 
   MMAL_ES_FORMAT_T *format;
@@ -657,6 +685,7 @@ void start_all (void) {
   cam_set_quality();
   cam_set_raw();
   cam_set_bitrate();
+  cam_set_annotation();
 
 }
 
@@ -702,7 +731,7 @@ void capt_img (void) {
 int main (int argc, char* argv[]) {
 
   int i, max, fd, length;
-  char readbuf[30];
+  char readbuf[60];
   char *filename_temp, *filename_temp2, *cmd_temp, *line;
   FILE *fp;
 
@@ -764,6 +793,9 @@ int main (int argc, char* argv[]) {
       }
       else if(strncmp(line, "control_file ", 13) == 0) {
         asprintf(&pipe_filename, "%s", line+13);
+      }
+      else if(strncmp(line, "annotation ", 11) == 0) {
+        asprintf(&cam_setting_annotation, "%s", line+11);
       }
       else if(strncmp(line, "MP4Box ", 7) == 0) {
         if(strncmp(line+7, "true", 4) == 0) mp4box = 1;
@@ -928,7 +960,7 @@ int main (int argc, char* argv[]) {
       fd = open(pipe_filename, O_RDONLY | O_NONBLOCK);
       if(fd < 0) error("Could not open PIPE");
       fcntl(fd, F_SETFL, 0);
-      length = read(fd, readbuf, 30);
+      length = read(fd, readbuf, 60);
       close(fd);
 
       if(length) {
@@ -1064,6 +1096,13 @@ int main (int argc, char* argv[]) {
           image_height = atoi(readbuf+24);
           start_all();
           printf("Changed resolutions and framerates\n");
+        }
+        else if((readbuf[0]=='a') && (readbuf[1]=='n')) {
+          readbuf[0] = ' ';
+          readbuf[1] = ' ';
+          readbuf[length] = 0;
+          asprintf(&cam_setting_annotation, "%s", readbuf+3);
+          printf("Annotation changed\n");
         }
         else if((readbuf[0]=='s') && (readbuf[1]=='h')) {
           readbuf[0] = ' ';

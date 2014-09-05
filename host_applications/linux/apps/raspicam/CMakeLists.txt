@@ -1,5 +1,5 @@
 
-# raspistill/raspivid/raspiyuv/raspimjpeg
+# raspistill/raspivid/raspiyuv
 
 SET(COMPILE_DEFINITIONS -Werror)
 
@@ -29,6 +29,6 @@ set (MMAL_LIBS mmal_core mmal_util mmal_vc_client)
 target_link_libraries(raspistill ${MMAL_LIBS} vcos bcm_host GLESv2 EGL m)
 target_link_libraries(raspiyuv   ${MMAL_LIBS} vcos bcm_host)
 target_link_libraries(raspivid   ${MMAL_LIBS} vcos bcm_host)
-target_link_libraries(raspimjpeg mmal_core mmal_util mmal_vc_client vcos bcm_host)
+target_link_libraries(raspimjpeg ${MMAL_LIBS} vcos bcm_host)
 
 install(TARGETS raspistill raspiyuv raspivid raspimjpeg RUNTIME DESTINATION bin)
