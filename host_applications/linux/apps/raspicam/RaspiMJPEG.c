@@ -77,7 +77,7 @@ MMAL_CONNECTION_T *con_cam_res, *con_res_jpeg, *con_cam_h264, *con_cam_jpeg;
 FILE *jpegoutput_file = NULL, *jpegoutput2_file = NULL, *h264output_file = NULL, *status_file = NULL;
 MMAL_POOL_T *pool_jpegencoder, *pool_jpegencoder2, *pool_h264encoder;
 unsigned int tl_cnt=0, mjpeg_cnt=0, width=320, divider=5, image_cnt=0, image2_cnt=0, video_cnt=0;
-unsigned int cam_setting_sharpness=0, cam_setting_contrast=0, cam_setting_brightness=50, cam_setting_saturation=0, cam_setting_iso=0, cam_setting_vs=0, cam_setting_ec=0, cam_setting_rotation=0, cam_setting_quality=85, cam_setting_raw=0, cam_setting_ce_en=0, cam_setting_ce_u=128, cam_setting_ce_v=128, cam_setting_hflip=0, cam_setting_vflip=0;
+unsigned int cam_setting_sharpness=0, cam_setting_contrast=0, cam_setting_brightness=50, cam_setting_saturation=0, cam_setting_iso=0, cam_setting_vs=0, cam_setting_ec=0, cam_setting_rotation=0, cam_setting_quality=85, cam_setting_raw=0, cam_setting_ce_en=0, cam_setting_ce_u=128, cam_setting_ce_v=128, cam_setting_hflip=0, cam_setting_vflip=0, cam_setting_annback=0;
 char cam_setting_em[20]="auto", cam_setting_wb[20]="auto", cam_setting_ie[20]="none", cam_setting_mm[20]="average";
 unsigned long int cam_setting_bitrate=17000000, cam_setting_roi_x=0, cam_setting_roi_y=0, cam_setting_roi_w=65536, cam_setting_roi_h=65536, cam_setting_ss=0;
 unsigned int video_width=1920, video_height=1080, video_fps=25, MP4Box_fps=25, image_width=2592, image_height=1944;
@@ -413,7 +413,7 @@ void cam_set_bitrate () {
 
 void cam_set_annotation () {
   char *filename_temp;
-  MMAL_PARAMETER_CAMERA_ANNOTATE_T anno = {{MMAL_PARAMETER_ANNOTATE, sizeof(MMAL_PARAMETER_CAMERA_ANNOTATE_T)}};
+  MMAL_PARAMETER_CAMERA_ANNOTATE_V2_T anno = {{MMAL_PARAMETER_ANNOTATE, sizeof(MMAL_PARAMETER_CAMERA_ANNOTATE_V2_T)}};
 
   if(cam_setting_annotation != 0) {
     currTime = time(NULL);
@@ -431,6 +431,7 @@ void cam_set_annotation () {
   anno.show_lens = 0;
   anno.show_caf = 0;
   anno.show_motion = 0;
+  anno.black_text_background = cam_setting_annback;
 
   status = mmal_port_parameter_set(camera->control, &anno.hdr);
   if(status != MMAL_SUCCESS) error("Could not set annotation");
@@ -797,6 +798,9 @@ int main (int argc, char* argv[]) {
       else if(strncmp(line, "annotation ", 11) == 0) {
         asprintf(&cam_setting_annotation, "%s", line+11);
       }
+      else if(strncmp(line, "anno_background ", 16) == 0) {
+        if(strncmp(line+16, "true", 4) == 0) cam_setting_annback = 1;
+      }
       else if(strncmp(line, "MP4Box ", 7) == 0) {
         if(strncmp(line+7, "true", 4) == 0) mp4box = 1;
       }
@@ -1103,6 +1107,15 @@ int main (int argc, char* argv[]) {
           readbuf[length] = 0;
           asprintf(&cam_setting_annotation, "%s", readbuf+3);
           printf("Annotation changed\n");
+        }
+        else if((readbuf[0]=='a') && (readbuf[1]=='b')) {
+          if(readbuf[3] == '0') {
+            cam_setting_annback = 0;
+          }
+          else {
+            cam_setting_annback = 1;
+          }
+          printf("Annotation background changed\n");
         }
         else if((readbuf[0]=='s') && (readbuf[1]=='h')) {
           readbuf[0] = ' ';
