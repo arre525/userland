@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Usage information in README_RaspiMJPEG.md
  */
 
-#define VERSION "4.2.2"
+#define VERSION "4.2.3"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -733,7 +733,7 @@ int main (int argc, char* argv[]) {
 
   int i, max, fd, length;
   char readbuf[60];
-  char *filename_temp, *filename_temp2, *cmd_temp, *line;
+  char *filename_temp, *filename_recording, *cmd_temp, *line;
   FILE *fp;
 
   bcm_host_init();
@@ -982,15 +982,14 @@ int main (int argc, char* argv[]) {
               currTime = time(NULL);
               localTime = localtime (&currTime);
               if(mp4box) {
-                asprintf(&filename_temp, h264_filename, video_cnt, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
-                asprintf(&filename_temp2, "%s.h264", filename_temp);
+                asprintf(&filename_recording, h264_filename, video_cnt, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
+                asprintf(&filename_temp, "%s.h264", filename_recording);
               }
               else {
-                asprintf(&filename_temp2, h264_filename, video_cnt, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
+                asprintf(&filename_temp, h264_filename, video_cnt, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
               }
-              h264output_file = fopen(filename_temp2, "wb");
-              free(filename_temp2);
-              if(mp4box) free(filename_temp);
+              h264output_file = fopen(filename_temp, "wb");
+              free(filename_temp);
               if(!h264output_file) error("Could not open/create video-file");
               status = mmal_port_enable(h264encoder->output[0], h264encoder_buffer_callback);
               if(status != MMAL_SUCCESS) error("Could not enable video port");
@@ -1034,13 +1033,12 @@ int main (int argc, char* argv[]) {
                 if(!motion_detection) fprintf(status_file, "boxing");
                 else fprintf(status_file, "md_boxing");
                 fclose(status_file);
-                asprintf(&filename_temp, h264_filename, video_cnt, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
-                asprintf(&cmd_temp, "MP4Box -fps %i -add %s.h264 %s > /dev/null", MP4Box_fps, filename_temp, filename_temp);
+                asprintf(&cmd_temp, "MP4Box -fps %i -add %s.h264 %s > /dev/null", MP4Box_fps, filename_recording, filename_recording);
                 if(system(cmd_temp) == -1) error("Could not start MP4Box");
-                asprintf(&filename_temp2, "%s.h264", filename_temp);
-                remove(filename_temp2);
+                asprintf(&filename_temp, "%s.h264", filename_recording);
+                remove(filename_temp);
                 free(filename_temp);
-                free(filename_temp2);
+                free(filename_recording);
                 free(cmd_temp);
                 printf("Boxing stopped\n");
               }
