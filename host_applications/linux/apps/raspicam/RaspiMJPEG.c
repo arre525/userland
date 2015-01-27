@@ -733,7 +733,7 @@ int main (int argc, char* argv[]) {
 
   int i, max, fd, length;
   char readbuf[60];
-  char *filename_temp, *filename_recording, *cmd_temp, *line;
+  char *filename_temp, *filename_recording, *cmd_temp, *line = NULL;
   FILE *fp;
 
   bcm_host_init();
