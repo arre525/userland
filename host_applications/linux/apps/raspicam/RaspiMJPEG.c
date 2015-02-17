@@ -60,6 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <signal.h>
 #include <fcntl.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "bcm_host.h"
 #include "interface/vcos/vcos.h"
@@ -734,7 +735,12 @@ int main (int argc, char* argv[]) {
   int i, max, fd, length;
   char readbuf[60];
   char *filename_temp, *filename_recording, *cmd_temp, *line = NULL;
+  struct timeval  tv;
+  double time_in_mill, currtime;
   FILE *fp;
+
+  gettimeofday(&tv, NULL);
+  time_in_mill =  (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 ; // convert tv_sec & tv_usec to millisecond
 
   bcm_host_init();
   
@@ -1320,12 +1326,16 @@ int main (int argc, char* argv[]) {
       }
 
     }
+
     if(timelapse) {
       tl_cnt++;
-      if(tl_cnt >= time_between_pic) {
+      gettimeofday(&tv, NULL);
+      currtime =  (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 ; // convert tv_sec & tv_usec to millisecond
+      if(currtime >= time_in_mill) {
         if(capturing == 0) {
           capt_img();
           tl_cnt = 0;
+          time_in_mill =  (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 + time_between_pic * 100;
         }
       }
     }
