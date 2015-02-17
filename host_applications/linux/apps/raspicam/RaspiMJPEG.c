@@ -711,7 +711,7 @@ void capt_img (void) {
 
   currTime = time(NULL);
   localTime = localtime (&currTime);
-  asprintf(&filename_temp, jpeg2_filename, image2_cnt, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
+  asprintf(&filename_temp, jpeg2_filename, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec, image2_cnt);
   jpegoutput2_file = fopen(filename_temp, "wb");
   free(filename_temp);
   if(!jpegoutput2_file) error("Could not open/create image-file");
@@ -982,7 +982,7 @@ int main (int argc, char* argv[]) {
               currTime = time(NULL);
               localTime = localtime (&currTime);
               if(mp4box) {
-                asprintf(&filename_recording, h264_filename, video_cnt, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
+                asprintf(&filename_recording, h264_filename, localTime->tm_year+1900, localTime->tm_mon+1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec, video_cnt);
                 asprintf(&filename_temp, "%s.h264", filename_recording);
               }
               else {
