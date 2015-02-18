@@ -1328,13 +1328,11 @@ int main (int argc, char* argv[]) {
     }
 
     if(timelapse) {
-      tl_cnt++;
       gettimeofday(&tv, NULL);
       currtime =  (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 ; // convert tv_sec & tv_usec to millisecond
       if(currtime >= time_in_mill) {
         if(capturing == 0) {
           capt_img();
-          tl_cnt = 0;
           time_in_mill =  (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 + time_between_pic * 100;
         }
       }
