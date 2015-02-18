@@ -6,6 +6,10 @@ SET(COMPILE_DEFINITIONS -Werror)
 include_directories(${CMAKE_SOURCE_DIR}/host_applications/linux/libs/bcm_host/include)
 include_directories(${CMAKE_SOURCE_DIR}/host_applications/linux/apps/raspicam/)
 
+include_directories(../../../../)
+include_directories(../../libs/bcm_host/include)
+
+
 set (GL_SCENE_SOURCES
    gl_scenes/models.c
    gl_scenes/mirror.c
