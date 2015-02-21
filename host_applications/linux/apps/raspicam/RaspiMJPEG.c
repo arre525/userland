@@ -83,7 +83,7 @@ unsigned int cam_setting_sharpness=0, cam_setting_contrast=0, cam_setting_bright
 char cam_setting_em[20]="auto", cam_setting_wb[20]="auto", cam_setting_ie[20]="none", cam_setting_mm[20]="average";
 unsigned long int cam_setting_bitrate=17000000, cam_setting_roi_x=0, cam_setting_roi_y=0, cam_setting_roi_w=65536, cam_setting_roi_h=65536, cam_setting_ss=0;
 unsigned int video_width=1920, video_height=1080, video_fps=25, MP4Box_fps=25, image_width=2592, image_height=1944;
-char *jpeg_filename = 0, *jpeg2_filename = 0, *jpeg2_root = 0, *h264_filename = 0, *pipe_filename = 0, *status_filename = 0, *cam_setting_annotation = 0;
+char *jpeg_filename = 0, *space_limit =0, *jpeg2_filename = 0, *jpeg2_root = 0, *h264_filename = 0, *pipe_filename = 0, *status_filename = 0, *cam_setting_annotation = 0;
 unsigned char timelapse=0, mp4box=0, running=1, autostart=1, quality=85, idle=0, capturing=0, motion_detection=0;
 int time_between_pic;
 time_t currTime;
@@ -711,6 +711,7 @@ void capt_img (void) {
 
   char *filename_temp;
   struct statvfs buf;
+  long limit = atoi(space_limit);
 
   currTime = time(NULL);
   localTime = localtime (&currTime);
@@ -719,8 +720,8 @@ void capt_img (void) {
   /* Check disk space */
   if(statvfs(jpeg2_root, &buf) == 0)
   {
-	  if (buf.f_bsize * buf.f_bfree < 10000000) {
-		/* Less than 10M available. Cancel! */
+	  if (limit > 0 && (buf.f_bsize * buf.f_bavail < limit)) {
+		/* Not enough space available. Cancel! */
 		return;
 	  }
   }
@@ -804,6 +805,9 @@ int main (int argc, char* argv[]) {
       }
       else if(strncmp(line, "preview_path ", 13) == 0) {
         asprintf(&jpeg_filename, "%s", line+13);
+      }
+      else if(strncmp(line, "spacelimit ", 11) == 0) {
+        asprintf(&space_limit, "%s", line+11);
       }
       else if(strncmp(line, "image_path ", 11) == 0) {
         asprintf(&jpeg2_filename, "%s", line+11);
